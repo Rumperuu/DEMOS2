@@ -244,7 +244,7 @@ function isEventTimingsValid() {
     var end_dateObj = new Date(end_date_time);
 
     // Ensure that the start date is before the end date and that the end date is after the start date
-    if(!(start_dateObj < end_dateObj && end_dateObj > start_dateObj)) {
+    if(!(start_date_time < end_date_time)) {
         checkAndAddError({
            error: "The start date must be before the end date and the end after the start date.",
            helpBlockId: "event-timings-error-block"

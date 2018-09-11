@@ -1,4 +1,19 @@
+function getBytes(arr) {
+    for(var i = 0; i < arr.length; i++) {
+        arr[i] = parseInt(arr[i]);
+    }
+
+    return new Uint8Array(arr);
+}
+
 $('#begin-test').click(function() {
+    var ctx = new CTX("BN254CX");
+    var ciphertext = {
+        C1: null,
+        C2: null,
+        r: null
+    }
+
     var ballot = JSON.parse(sjcl.decrypt($('#SK').val(), $('#ballot').text()));
 
     var votes = ballot['encryptedVotes'];
@@ -10,21 +25,26 @@ $('#begin-test').click(function() {
         voteNum++;
         $('#ballot-result').text($('#ballot-result').text() + "Vote " + voteNum + ": \n ");
 
-        // For each encrypted fragment within the vote (i.e. the presence of a vote for each option)...
+        // For each encrypted fragment within the vote (i.e. the encoded vote for one option)...
         vote['fragments'].forEach(function(fragment) {
             optionNum++;
             $('#ballot-result').text($('#ballot-result').text() + "Option " + optionNum + ": \n  ");
 
             var encoding = "";
-            console.log(fragment);
 
-            // For each pair of values in C1 and C2 and the randomness r, test whether C2/(C1)^r = g^0 or g^1, and
-            // record g's exponent.
-            for (var i = 0; i < fragment['C1'].length; i++) {
-                cipherText = "("+fragment['C1']+","+fragment['C2']+")";
-                var m = fragment['C2'][i] / Math.pow(fragment['C1'][i], fragment['r'][i]);
-                encoding += (m) ? "1" : "0";
-            }
+            var C1 = getBytes(fragment['C1'].split(","));
+            var C2 = getBytes(fragment['C2'].split(","));
+            var r = getBytes(fragment['r'].split(","));
+
+            ciphertext.C1 = new ctx.ECP.fromBytes(C1);
+            ciphertext.C2 = new ctx.ECP.fromBytes(C2);
+            ciphertext.r = new ctx.BIG.fromBytes(r);
+
+            // For each pair of C1,C2 values (i.e. one ballot's ciphertext) and the randomness used in its encryption r,
+            // test whether C2/(C1)^r = g^0 or g^1, and record g's exponent.
+            var m = ciphertext.C2 / Math.pow(ciphertext.C1, ciphertext.r);
+            console.log("m = "+m);
+            encoding += (m) ? "1" : "0";
 
             // Somehow, this string of 1s and 0s  here needs to become _one_ 1 or 0 to signify whether the option was
             // voted for or not.

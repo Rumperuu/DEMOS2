@@ -374,7 +374,7 @@ encrypt = function(params,PK, m) {
         C2 = ctx.PAIR.G1mul(PK,r);
         C2.mul(r);
         C2.add(gM);
-        
+
         return{
             C1:C1,
             C2:C2
