@@ -557,8 +557,11 @@ function sendBallotsToServer(selection, selectedBallot, otherBallot) {
     var ballotID = encodeURIComponent(btoa(JSON.stringify({voterID: voterID, eventID: eventID, pollNum: pollNum})));
 
     // TODO: Generate a SK rather than using a static one. UUID generated server side and then injected JS side?
+    JSON.stringify(otherBallot)
     var SK = "temporary";
     var encAlt = sjcl.encrypt(SK, JSON.stringify(otherBallot));
+    var out = (new sjcl.misc.hmac(key, sjcl.hash.sha256)).mac(encAlt);
+    var hmac = sjcl.codec.hex.fromBits(out);
     let selectedBallotAsStr = JSON.stringify(selectedBallot);
 
     $.ajax({
@@ -566,13 +569,13 @@ function sendBallotsToServer(selection, selectedBallot, otherBallot) {
          url : window.location,
          data : {  handle: ballotID, encBallot: encAlt, ballot: selectedBallotAsStr, selection: selection },
          success : function(){
-             onAfterBallotSend(ballotID, SK);
+             onAfterBallotSend(ballotID, SK, hmac);
          }
     });
 }
 
 // Called once the ballot has been sent to the back-end and dialog has closed
-function onAfterBallotSend(ballotID, SK) {
+function onAfterBallotSend(ballotID, SK, hmac) {
     // With one ballot selected, we can display a QR code of the ballot ID
     var modalDialog = $('#modalDialog');
     var title = modalDialog.find('.modal-title');
@@ -593,7 +596,7 @@ function onAfterBallotSend(ballotID, SK) {
     // Add the second section: QR code that contains the ballot identifier
     var QRCodeImg = document.createElement('img');
     QRCodeImg.setAttribute('class', 'QR-code');
-    new QRCode(QRCodeImg, ballotID);
+    new QRCode(QRCodeImg, ballotID+";"+btoa(hmac));
 
     body.append(QRCodeImg);
 
@@ -602,7 +605,7 @@ function onAfterBallotSend(ballotID, SK) {
     instructions2Div.setAttribute('class', 'containerMarginTop');
 
     let instructions2Txt = "You will also be emailed the ballot identifier. However, you will need to note down the following " +
-        "secret in order to later verify your ballot was recorded as cast: ";
+        "secret in order to later verify your ballot was cast as recorded: ";
     let instructions2P = document.createElement('p');
     instructions2P.innerHTML = instructions2Txt;
     instructions2Div.append(instructions2P);

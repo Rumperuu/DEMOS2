@@ -32,17 +32,19 @@ $('#begin-test').click(function() {
 
             var encoding = "";
 
-            var C1 = getBytes(fragment['C1'].split(","));
-            var C2 = getBytes(fragment['C2'].split(","));
-            var r = getBytes(fragment['r'].split(","));
+            var C1Bytes = getBytes(fragment['C1'].split(","));
+            var C2Bytes = getBytes(fragment['C2'].split(","));
+            var rBytes = getBytes(fragment['r'].split(","));
 
-            ciphertext.C1 = new ctx.ECP.fromBytes(C1);
-            ciphertext.C2 = new ctx.ECP.fromBytes(C2);
-            ciphertext.r = new ctx.BIG.fromBytes(r);
+            ciphertext.C1 = new ctx.ECP.fromBytes(C1Bytes);
+            ciphertext.C2 = new ctx.ECP.fromBytes(C2Bytes);
+            ciphertext.r = new ctx.BIG.fromBytes(rBytes);
 
             // For each pair of C1,C2 values (i.e. one ballot's ciphertext) and the randomness used in its encryption r,
             // test whether C2/(C1)^r = g^0 or g^1, and record g's exponent.
-            var m = ciphertext.C2 / Math.pow(ciphertext.C1, ciphertext.r);
+            //var c1 = ctx.PAIR.GTpow(ciphertext.C1, ciphertext.r);
+
+            var m = ciphertext.C2.div(Math.pow(ciphertext.C1, ciphertext.r));
             console.log("m = "+m);
             encoding += (m) ? "1" : "0";
 
