@@ -328,12 +328,51 @@ function generateBallots() {
         var ballotB = generateBallot();
         progressBar.setAttribute("style", "width: 100%;");
 
-        showFirstQRCode(ballotA, ballotB, selectedOption);
+        showIDsQRCode(ballotA, ballotB, selectedOption);
     }, 150);
 }
 
+function showIDsQRCode(ballotA, ballotB, selectedOption) {
+    var voterID = window.location.search.slice(1).split(/=(.+)/)[1];
+    var eventID = window.location.href.split('/')[4];
+    var pollID = $('#poll-num').text();
+
+    // Display a QR code with ID details
+    var modalDialog = $('#modalDialog');
+    var title = modalDialog.find('.modal-title');
+    var body = modalDialog.find('.modal-body');
+
+    body.empty();
+    title.text('Step 0 of 3: Scan this');
+
+    let pleaseScanP = document.createElement('p');
+    pleaseScanP.innerHTML = "Please scan the following QR code from your DEMOS 2 mobile application:";
+
+    let QRDiv = document.createElement('div');
+    var QRCodeImg = document.createElement('img');
+    QRCodeImg.setAttribute('class', 'QR-code');
+    QRCodeImg.setAttribute('id', "qr-img");
+    new QRCode(QRCodeImg, voterID+";"+eventID+";"+pollID);
+    QRDiv.append(QRCodeImg);
+    
+    body.append(pleaseScanP);
+    body.append(QRDiv);
+    
+     // Prepare the appropriate dialog buttons
+    updateDialogButtons(DIALOG_BTN_STATES.STEP_1);
+
+    if(!dialogOpen) {
+        modalDialog.modal('toggle');
+        dialogOpen = true;
+    }
+
+    $('#nextDialogBtn').click(function(e) {
+        showHashQRCode(ballotA, ballotB, selectedOption);
+    });
+};
+
 // Called in stage 1 of 3 in the voting process
-function showFirstQRCode(ballotA, ballotB, selectedOption) {
+function showHashQRCode(ballotA, ballotB, selectedOption) {
     var ballots = new Array(ballotA, ballotB);
     var ballotHashes = new Array(2);
 
@@ -350,7 +389,7 @@ function showFirstQRCode(ballotA, ballotB, selectedOption) {
     title.text('Step 1 of 3: Link Your Vote');
 
     let pleaseScanP = document.createElement('p');
-    pleaseScanP.innerHTML = "Please scan the following QR code from your DEMOS 2 mobile application:";
+    pleaseScanP.innerHTML = "Please scan the following QR code from your DEMOS 2 auditor:";
 
     let QRDiv = document.createElement('div');
     var QRCodeImg = document.createElement('img');
@@ -551,19 +590,22 @@ function sendBallotsToServer(selection, selectedBallot, otherBallot) {
     var pk = new ctx.ECP(0);
     pk.copy(tempPK.PK);
 
-    var voterID = window.location.search.slice(1).split(/=(.+)/)[1];//.slice(0, -2);
+    // Prepares the unselected ballot to send, encrypted, to the server.
+    // Creates the unique ballot ID for the unselected ballot
+    var voterID = window.location.search.slice(1).split(/=(.+)/)[1];
     var eventID = window.location.href.split('/')[4];
     var pollNum = $('#poll-num').text();
     var ballotID = encodeURIComponent(btoa(JSON.stringify({voterID: voterID, eventID: eventID, pollNum: pollNum})));
-
     // TODO: Generate a SK rather than using a static one. UUID generated server side and then injected JS side?
-    JSON.stringify(otherBallot)
     var SK = "temporary";
-    var encAlt = sjcl.encrypt(SK, JSON.stringify(otherBallot));
+    var encAlt = sjcl.encrypt(SK, JSON.stringify({ballotID: ballotID, ballot: otherBallot}));
+    
+    // Generates an HMAC to protect the encrypted ballot from tampering.
     var out = (new sjcl.misc.hmac(key, sjcl.hash.sha256)).mac(encAlt);
     var hmac = sjcl.codec.hex.fromBits(out);
+    
+    // Prepares the selected ballot to submit to the server.
     let selectedBallotAsStr = JSON.stringify(selectedBallot);
-
     $.ajax({
          type : "POST",
          url : window.location,
@@ -593,7 +635,7 @@ function onAfterBallotSend(ballotID, SK, hmac) {
     instructions1P.innerHTML = instructions1Txt;
     body.append(instructions1P);
 
-    // Add the second section: QR code that contains the ballot identifier
+    // Add the second section: QR code that contains the ballot identifier and HMAC
     var QRCodeImg = document.createElement('img');
     QRCodeImg.setAttribute('class', 'QR-code');
     new QRCode(QRCodeImg, ballotID+";"+btoa(hmac));

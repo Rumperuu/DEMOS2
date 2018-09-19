@@ -1,0 +1,11 @@
+{% extends "bases/bootstrap-with-nav.html" %}
+{% load staticfiles %}
+{% load bootstrap3 %}
+
+{% block content %}
+
+<pre hidden id="ballot_found">{{ ballot }}</pre>
+<pre hidden id="ballot_hashes">{{ hash1 }};{{ hash2 }}</pre>
+<h1 id="ballot_result"></h1>
+
+{% endblock %}

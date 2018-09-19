@@ -4,15 +4,31 @@
 
 {% block content %}
 
-<input id="SK" value="temporary" type="text"/>
-<button id="begin-test">Verify Ballot</button>
-<br>
-<br>
-<label for="ballot">AES-encrypted ballot from server</label>
-<pre id="ballot">{{ ballot }}</pre>
-<label for="ballot-content">Decrypted ballot</label>
-<pre id="ballot-content"></pre>
-<label for="ballot">Ballot encoding</label>
-<pre id="ballot-result"></pre>
+<label class="gp-1" for="handle1">Ballot #1 handle:</label>
+<input class="gp-1"  id="handle1" value="{{ handle1 }}" type="text"/>
+<label class="gp-1" for="handle2">Ballot handle:</label>
+<input class="gp-1"  id="handle2" value="{{ handle2 }}" type="text"/>
+<button class="gp-1"  id="retrieve-ballots">Retrieve Ballots</button>
+
+<hr>
+
+<label class="gp-2" for="ballot1">AES-encrypted ballot #1 from server</label>
+<pre class="gp-2"  id="ballot1">{{ ballot }}</pre>
+<input class="gp-2"  id="SK1" value="temporary" type="text"/>
+<button class="gp-2"  id="decrypt-ballot1">Decrypt Ballot</button>
+<label class="gp-3"  for="ballot-content1">Decrypted ballot</label>
+<pre class="gp-3"  id="ballot-content1"></pre>
+<label class="gp-3"  for="ballot-result1">Ballot encoding</label>
+<pre class="gp-3"  id="ballot-result1"></pre>
+
+<hr>
+<label class="gp-2" for="ballot2">AES-encrypted ballot #2 from server</label>
+<pre class="gp-2"  id="ballot2">{{ ballot2 }}</pre>
+<input class="gp-2"  id="SK2" value="temporary" type="text"/>
+<button class="gp-2"  id="decrypt-ballot2">Decrypt Ballot</button>
+<label class="gp-3"  for="ballot-content2">Decrypted ballot</label>
+<pre class="gp-3"  id="ballot-content2"></pre>
+<label class="gp-3"  for="ballot-result2">Ballot encoding</label>
+<pre class="gp-3"  id="ballot-result2"></pre>
 
 {% endblock %}

@@ -6,6 +6,25 @@ function getBytes(arr) {
     return new Uint8Array(arr);
 }
 
+$( document ).ready(function() {
+   $('.gp-2, .gp-3').hide();
+   var n = 0;
+   for (var i = 0; i <= 1; i++) {
+      if ($('#handle'+i).val() != "") {
+         n++;
+      }
+   }
+   if (n == 2) {
+      $('ballot-group'+i+' .gp-1').css('opacity','0.6');
+      $('#retrieve-ballots').prop('disabled', true);
+      $('ballot-group'+i+' .gp-2').show();
+   }
+});
+
+$('#retrieve-ballots').click(function() {
+   window.location = "/audit?handle="+$('#handle1').val()+'&handle2='+$('#handle2').val();
+});
+
 $('#begin-test').click(function() {
     var ctx = new CTX("BN254CX");
     var ciphertext = {
@@ -44,7 +63,19 @@ $('#begin-test').click(function() {
             // test whether C2/(C1)^r = g^0 or g^1, and record g's exponent.
             //var c1 = ctx.PAIR.GTpow(ciphertext.C1, ciphertext.r);
 
-            var m = ciphertext.C2.div(Math.pow(ciphertext.C1, ciphertext.r));
+            var B;
+            var j;
+            for (j = 0; j <= 1; j++) {
+                //use D as temp var
+                B = new ctx.BIG(j);
+                D = ctx.PAIR.G1mul(params.g1,B);
+                if (D.equals(gM)) {
+                    return {
+                        M:j
+                    }
+                }
+            };
+
             console.log("m = "+m);
             encoding += (m) ? "1" : "0";
 
